@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bloody Timer Mobile Fixed</title>
+    <style>
+        :root {
+            --bg-color: #050000;
+            --text-color: #ffe4e6;
+            --blood-light: #ff3333;
+            --blood-dark: #660000;
+            --glass-bg-base: rgba(40, 0, 0, 0.3);
+            --glass-border: rgba(255, 80, 80, 0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 0%, #350505, #000000);
+            position: relative;
+        }
+
+        /* --- GITHUB LINK STYLE --- */
+        .github-link {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            color: rgba(255, 228, 230, 0.5); /* Poloprůhledná bílá */
+            transition: all 0.3s ease;
+            z-index: 100; /* Musí být nad vším ostatním */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .github-link svg {
+            width: 32px;
+            height: 32px;
+            fill: currentColor;
+        }
+
+        .github-link:hover {
+            color: var(--blood-light); /* Zčervená při najetí */
+            transform: scale(1.1); /* Jemně se zvětší */
+            filter: drop-shadow(0 0 10px var(--blood-light)); /* Krvavá záře */
+        }
+
+        .ambient-glow {
+            position: fixed;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(220, 20, 60, 0.15) 0%, rgba(0,0,0,0) 60%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            transform: translate(-50%, -50%);
+            filter: blur(80px);
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            mix-blend-mode: screen;
+        }
+
+        .container {
+            --mouse-x: 50%;
+            --mouse-y: 50%;
+            
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            
+            background:
+                radial-gradient(
+                    800px circle at var(--mouse-x) var(--mouse-y),
+                    rgba(255, 50, 50, 0.25),
+                    transparent 40%
+                ),
+                var(--glass-bg-base);
+
+            background-blend-mode: screen, normal;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 
+                inset 0 0 20px rgba(255, 0, 0, 0.1),
+                0 30px 70px -12px rgba(0, 0, 0, 0.9);
+                
+            padding: 3rem 4rem;
+            border-radius: 24px;
+            animation: fadeIn 1.5s ease-out;
+        }
+
+        h1 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: rgba(255, 120, 120, 0.8);
+            margin-bottom: 2rem;
+            font-weight: 500;
+            text-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
+        }
+
+        .timer {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            align-items: flex-start;
+            position: relative; 
+            z-index: 2;
+        }
+
+        .time-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 80px;
+        }
+
+        .number {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1;
+            font-feature-settings: "tnum";
+            font-variant-numeric: tabular-nums;
+            background: -webkit-linear-gradient(180deg, var(--blood-light), #ffffff 90%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 8px rgba(255, 30, 30, 0.5));
+        }
+
+        .label {
+            margin-top: 0.8rem;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 200, 200, 0.5);
+        }
+
+        .separator {
+            font-size: 2.5rem;
+            font-weight: 300;
+            color: rgba(255, 80, 80, 0.4);
+            transform: translateY(-3px);
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes heartbeat {
+            0% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(255, 30, 30, 0.5)); }
+            15% { transform: scale(1.05); filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.8)); }
+            30% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(255, 30, 30, 0.5)); }
+            45% { transform: scale(1.05); filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.8)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(255, 30, 30, 0.5)); }
+        }
+
+        @media (max-width: 768px) {
+            /* Mobilní úprava GitHub ikony */
+            .github-link {
+                top: 1.5rem;
+                right: 1.5rem;
+            }
+            .github-link svg {
+                width: 28px;
+                height: 28px;
+            }
+
+            .container {
+                width: 85%;
+                padding: 2rem 1rem;
+                box-shadow: 
+                    inset 0 0 30px rgba(255, 0, 0, 0.2),
+                    0 10px 40px rgba(0, 0, 0, 0.8);
+            }
+
+            h1 {
+                font-size: 0.7rem;
+                margin-bottom: 2rem;
+                letter-spacing: 2px;
+                opacity: 0.8;
+            }
+
+            .timer {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 2rem 0.5rem; 
+                width: 100%;
+            }
+
+            .separator { display: none; }
+
+            .time-unit:nth-child(1) {
+                grid-column: span 2; 
+                border-bottom: 1px solid rgba(255, 50, 50, 0.15);
+                padding-bottom: 2rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .time-unit:nth-child(1) .number {
+                font-size: 5rem;
+                animation: heartbeat 3s infinite ease-in-out;
+            }
+            
+            .time-unit:nth-child(1) .label {
+                font-size: 0.9rem;
+                color: var(--blood-light);
+                font-weight: 600;
+                letter-spacing: 4px;
+                margin-top: 0;
+            }
+
+            .time-unit { width: 100%; }
+
+            .number { font-size: 2.2rem; }
+            .label { font-size: 0.6rem; margin-top: 0.4rem; opacity: 0.6; }
+
+            .time-unit:last-child {
+                grid-column: auto;
+                margin-top: 0;
+                opacity: 1;
+                transform: none;
+            }
+            
+            .time-unit:last-child .number {
+                 opacity: 0.8; 
+                 font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <a href="https://github.com/yuw1xx/myboyvalentyn.github.io" target="_blank" class="github-link" aria-label="GitHub Repository">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.04-.015-2.04-3.338.72-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.31 24 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+    </a>
+
+    <div class="ambient-glow"></div>
+
+    <div class="container">
+        <h1 id="title">In Love For...</h1>
+        
+        <div class="timer">
+            <div class="time-unit">
+                <span class="number" id="days">00</span>
+                <span class="label" id="label-days">Days</span>
+            </div>
+            <div class="separator">:</div>
+
+            <div class="time-unit">
+                <span class="number" id="hours">00</span>
+                <span class="label" id="label-hours">Hours</span>
+            </div>
+            <div class="separator">:</div>
+
+            <div class="time-unit">
+                <span class="number" id="minutes">00</span>
+                <span class="label" id="label-minutes">Minutes</span>
+            </div>
+            <div class="separator">:</div>
+
+            <div class="time-unit">
+                <span class="number" id="seconds">00</span>
+                <span class="label" id="label-seconds">Seconds</span>
+            </div>
+            <div class="separator">:</div>
+
+            <div class="time-unit">
+                <span class="number" id="centiseconds">00</span>
+                <span class="label">Miliseconds</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ambientGlow = document.querySelector('.ambient-glow');
+        const container = document.querySelector('.container');
+        
+        function moveGlow(clientX, clientY) {
+            ambientGlow.style.left = clientX + 'px';
+            ambientGlow.style.top = clientY + 'px';
+            ambientGlow.style.opacity = '1';
+
+            const rect = container.getBoundingClientRect();
+            const x = clientX - rect.left;
+            const y = clientY - rect.top;
+            
+            container.style.setProperty('--mouse-x', `${x}px`);
+            container.style.setProperty('--mouse-y', `${y}px`);
+        }
+
+        document.addEventListener('mousemove', (e) => moveGlow(e.clientX, e.clientY));
+        document.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            moveGlow(touch.clientX, touch.clientY);
+        });
+
+        /* --- TIMER LOGIKA --- */
+        const startDate = new Date(2025, 9, 25, 13, 56, 0).getTime();
+
+        function updateTimer() {
+            const now = new Date().getTime();
+            const distance = now - startDate;
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            const centiseconds = Math.floor((distance % 1000) / 10);
+
+            document.getElementById("days").innerText = days;
+            document.getElementById("hours").innerText = formatNumber(hours);
+            document.getElementById("minutes").innerText = formatNumber(minutes);
+            document.getElementById("seconds").innerText = formatNumber(seconds);
+            document.getElementById("centiseconds").innerText = formatNumber(centiseconds);
+
+            document.getElementById("label-days").innerText = (days === 1) ? "Day" : "Days";
+            document.getElementById("label-hours").innerText = (hours === 1) ? "Hour" : "Hours";
+            document.getElementById("label-minutes").innerText = (minutes === 1) ? "Minute" : "Minutes";
+            document.getElementById("label-seconds").innerText = (seconds === 1) ? "Second" : "Seconds";
+        }
+
+        function formatNumber(num) {
+            return num < 10 ? `0${num}` : num;
+        }
+
+        setInterval(updateTimer, 10);
+        updateTimer();
+    </script>
+</body>
+</html>
